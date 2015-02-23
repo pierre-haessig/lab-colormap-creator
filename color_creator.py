@@ -9,27 +9,9 @@ Pierre Haessig — February 2015
 from __future__ import division, print_function, unicode_literals
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from skimage import color
-
-
-# create the initial plot
-
-fig = plt.figure('Colormap creator')
-ax = fig.add_subplot(111)
-ax.set(xlabel='a', ylabel='b')
-
-
-x0 = [0,1,2]
-y0 = [0,1,1.5]
-c = ['r', 'g', 'b']
-
-lines = []
-
-for i in range(len(x0)):
-    lines.append(
-    ax.plot(x0[i], y0[i], 'D', color=c[i])
-    )
 
 
 # Global extent of the ab plane
@@ -88,4 +70,54 @@ def plot_ab_plane(L):
     plt.tight_layout()
     
 
-plt.show()
+def lab2rgb_list(lab):
+    '''wrapper of `lab2rgb` for list of tuples and (N,3) arrays'''
+    lab = np.asarray(lab, dtype=float)
+    assert lab.ndim == 2
+    return color.lab2rgb(lab[None,:,:])[0,:,:]
+
+
+def plot_cmap(cmap, **ax_kwargs):
+    x = np.linspace(0,1, 500)[None, :]
+    rgba = cmap(x)    
+
+    fig, ax = plt.subplots(1,1, figsize=(6,2), num='Colormap demo')
+
+    ax.imshow(rgba, interpolation="nearest")
+    ax.set_aspect('auto')
+    # remove ticks and use a light gray frame
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.setp(ax.spines.values(), color=(0.8,)*3)
+    ax.set(**ax_kwargs)
+    return ax
+
+# blue green yellow
+pts_lab = [
+    (25, 50, -70),
+    (50, -50, 50),
+    (75, 20, 75),
+]    
+
+def plot_lab_pts(pts_lab, **plotargs):
+    
+    fig = plt.figure('Colormap creator')
+    ax = fig.add_subplot(111)
+    ax.set(
+        xlabel = 'a', ylabel = 'b',
+        xlim = (a_min,a_max),
+        ylim = (b_min,b_max),
+        aspect='equal',
+    )
+
+    # compute the sRGB color
+    pts_rgb = lab2rgb_list(pts_lab)
+    
+    # Plot each point as an individual Line object
+    for i in range(len(pts_lab)):
+        l, a, b = pts_lab[i]
+        plt.plot(a, b, 'o', color=pts_rgb[i], **plotargs)
+    
+    return ax
+    
+    
